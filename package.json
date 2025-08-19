@@ -1,0 +1,41 @@
+{
+  "name": "personal-cost-tracker",
+  "version": "1.0.0",
+  "description": "A client-side personal expense tracking application with SQLite database and authentication",
+  "main": "index.html",
+  "scripts": {
+    "start": "python -m http.server 8000",
+    "serve": "python3 -m http.server 8000",
+    "dev": "npx http-server -p 8000 -o",
+    "build": "echo 'No build process required for static files'"
+  },
+  "keywords": [
+    "expense-tracker",
+    "personal-finance",
+    "sqlite",
+    "javascript",
+    "html",
+    "css",
+    "budget-tracker",
+    "static-website"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "sql.js": "^1.8.0"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/personal-cost-tracker.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/personal-cost-tracker/issues"
+  },
+  "homepage": "https://github.com/yourusername/personal-cost-tracker#readme",
+  "engines": {
+    "node": ">=12.0.0"
+  }
+}
