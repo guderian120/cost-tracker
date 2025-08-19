@@ -2,6 +2,7 @@
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
+const { pool } = requre('./db');
 require('dotenv').config();
 const app = express();
 app.use(cors());
@@ -30,10 +31,7 @@ process.on('uncaughtException', (err) => {
   console.error('Uncaught exception:', err);
 });
 // Use pooled connection (Supabase compatible)
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false },
-});
+
 
 async function initDB() {
   const client = await pool.connect();
