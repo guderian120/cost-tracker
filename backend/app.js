@@ -7,7 +7,29 @@ const { pool } = require('./db');
 const app = express();
 app.use(cors());
 app.use(express.json());
+// Add this at the top of your backend/app.js
+console.log('Environment variables:', {
+  DATABASE_URL: process.env.DATABASE_URL ? 'Set' : 'Missing',
+  NODE_ENV: process.env.NODE_ENV
+});
 
+// Add error handling middleware at the end of your app.js
+app.use((error, req, res, next) => {
+  console.error('Unhandled error:', error);
+  res.status(500).json({ 
+    error: 'Internal server error',
+    message: error.message 
+  });
+});
+
+// Handle uncaught rejections
+process.on('unhandledRejection', (err) => {
+  console.error('Unhandled rejection:', err);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught exception:', err);
+});
 // Use pooled connection (Supabase compatible)
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
