@@ -8,7 +8,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 // Add this at the top of your backend/app.js
-console.log('Environment variables:', {
+console.log('Environment variables:', { 
   DATABASE_URL: process.env.DATABASE_URL ? 'Set' : 'Missing',
   NODE_ENV: process.env.NODE_ENV
 });
