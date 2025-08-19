@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Cost Tracker</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
+</head>
+<body>
+    <!-- Authentication Section -->
+    <div id="auth-container" class="container">
+        <div class="auth-form">
+            <h1>Personal Cost Tracker</h1>
+            
+            <!-- Login Form -->
+            <div id="login-form" class="form-section">
+                <h2>Login</h2>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="login-username">Username:</label>
+                        <input type="text" id="login-username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Password:</label>
+                        <input type="password" id="login-password" required>
+                    </div>
+                    <button type="submit">Login</button>
+                </form>
+                <p><a href="#" id="show-register">Don't have an account? Register here</a></p>
+            </div>
+
+            <!-- Register Form -->
+            <div id="register-form" class="form-section" style="display: none;">
+                <h2>Register</h2>
+                <form id="registerForm">
+                    <div class="form-group">
+                        <label for="register-username">Username:</label>
+                        <input type="text" id="register-username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-password">Password:</label>
+                        <input type="password" id="register-password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-confirm">Confirm Password:</label>
+                        <input type="password" id="register-confirm" required>
+                    </div>
+                    <button type="submit">Register</button>
+                </form>
+                <p><a href="#" id="show-login">Already have an account? Login here</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="app-container" class="container" style="display: none;">
+        <header>
+            <h1>Personal Cost Tracker</h1>
+            <div class="user-info">
+                <span id="welcome-user"></span>
+                <button id="logout-btn" class="logout-btn">Logout</button>
+            </div>
+        </header>
+
+        <nav class="nav-tabs">
+            <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
+            <button class="tab-btn" data-tab="add-expense">Add Expense</button>
+            <button class="tab-btn" data-tab="expenses">View Expenses</button>
+            <button class="tab-btn" data-tab="projections">Monthly Projections</button>
+        </nav>
+
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content active">
+            <h2>Financial Overview</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Total Expenses (This Month)</h3>
+                    <p class="stat-value" id="monthly-total">$0.00</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Expenses (All Time)</h3>
+                    <p class="stat-value" id="total-expenses">$0.00</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Monthly Budget</h3>
+                    <p class="stat-value" id="monthly-budget">$0.00</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Remaining Budget</h3>
+                    <p class="stat-value" id="remaining-budget">$0.00</p>
+                </div>
+            </div>
+            <div class="recent-expenses">
+                <h3>Recent Expenses</h3>
+                <div id="recent-expenses-list"></div>
+            </div>
+        </div>
+
+        <!-- Add Expense Tab -->
+        <div id="add-expense" class="tab-content">
+            <h2>Add New Expense</h2>
+            <form id="expense-form" class="expense-form">
+                <div class="form-group">
+                    <label for="expense-description">Description:</label>
+                    <input type="text" id="expense-description" required>
+                </div>
+                <div class="form-group">
+                    <label for="expense-amount">Amount:</label>
+                    <input type="number" id="expense-amount" step="0.01" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="expense-category">Category:</label>
+                    <select id="expense-category" required>
+                        <option value="">Select Category</option>
+                        <option value="Food">Food</option>
+                        <option value="Transportation">Transportation</option>
+                        <option value="Entertainment">Entertainment</option>
+                        <option value="Utilities">Utilities</option>
+                        <option value="Shopping">Shopping</option>
+                        <option value="Healthcare">Healthcare</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="expense-date">Date:</label>
+                    <input type="date" id="expense-date" required>
+                </div>
+                <button type="submit">Add Expense</button>
+            </form>
+        </div>
+
+        <!-- View Expenses Tab -->
+        <div id="expenses" class="tab-content">
+            <h2>Expense History</h2>
+            <div class="filters">
+                <div class="filter-group">
+                    <label for="filter-category">Filter by Category:</label>
+                    <select id="filter-category">
+                        <option value="">All Categories</option>
+                        <option value="Food">Food</option>
+                        <option value="Transportation">Transportation</option>
+                        <option value="Entertainment">Entertainment</option>
+                        <option value="Utilities">Utilities</option>
+                        <option value="Shopping">Shopping</option>
+                        <option value="Healthcare">Healthcare</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filter-month">Filter by Month:</label>
+                    <select id="filter-month"></select>
+                </div>
+                <button id="clear-filters">Clear Filters</button>
+            </div>
+            <div id="expenses-list"></div>
+        </div>
+
+        <!-- Monthly Projections Tab -->
+        <div id="projections" class="tab-content">
+            <h2>Monthly Budget & Projections</h2>
+            <form id="budget-form" class="budget-form">
+                <div class="form-group">
+                    <label for="monthly-budget-input">Set Monthly Budget:</label>
+                    <input type="number" id="monthly-budget-input" step="0.01" min="0" placeholder="Enter your monthly budget">
+                    <button type="submit">Update Budget</button>
+                </div>
+            </form>
+            
+            <div class="projection-stats">
+                <div class="stat-card">
+                    <h3>Current Month Progress</h3>
+                    <div class="progress-bar">
+                        <div id="progress-fill" class="progress-fill"></div>
+                    </div>
+                    <p id="progress-text">0% of budget used</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Average Daily Spending</h3>
+                    <p class="stat-value" id="daily-average">$0.00</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Projected Monthly Total</h3>
+                    <p class="stat-value" id="projected-total">$0.00</p>
+                </div>
+            </div>
+            
+            <div class="category-breakdown">
+                <h3>Spending by Category (This Month)</h3>
+                <div id="category-chart"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="loading" class="loading">Loading...</div>
+    <div id="message" class="message"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
