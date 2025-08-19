@@ -2,11 +2,10 @@
   "name": "personal-cost-tracker",
   "version": "1.0.0",
   "description": "A client-side personal expense tracking application with SQLite database and authentication",
-  "main": "index.html",
+  "main": "server.js",
   "scripts": {
-    "start": "python -m http.server 8000",
-    "serve": "python3 -m http.server 8000",
-    "dev": "npx http-server -p 8000 -o",
+    "start": "node server.js",
+    "server": "node server.js",
     "build": "echo 'No build process required for static files'"
   },
   "keywords": [
@@ -22,19 +21,20 @@
   "author": "Your Name",
   "license": "MIT",
   "dependencies": {
-    "sql.js": "^1.8.0"
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "pg": "^8.12.0"
   },
-  "devDependencies": {
-    "http-server": "^14.1.1"
-  },
+  "devDependencies": {},
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/personal-cost-tracker.git"
+    "url": "https://github.com/guderian120/cost-tracker.git"
   },
   "bugs": {
-    "url": "https://github.com/yourusername/personal-cost-tracker/issues"
+    "url": "https://github.com/guderian120/cost-tracker/issues"
   },
-  "homepage": "https://github.com/yourusername/personal-cost-tracker#readme",
+  "homepage": "https://github.com/guderian120/cost-tracker.git#readme",
   "engines": {
     "node": ">=12.0.0"
   }
