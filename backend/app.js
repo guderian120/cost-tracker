@@ -242,6 +242,79 @@ function registerRoutes(prefix = '') {
     }
   });
 
+  // Monthly summary endpoint
+  app.get(`${prefix}/stats/monthly-summary`, async (req, res) => {
+    const userId = parseInt(req.query.user_id, 10);
+    const monthStr = req.query.monthStr; // YYYY-MM
+    const categoryFilter = req.query.category; // optional: Transportation, Food, Others
+    if (!userId || !monthStr) return res.status(400).json({ error: 'Missing params' });
+    
+    try {
+      // Build query based on category filter
+      let categoryCondition = '';
+      let params = [userId, monthStr];
+      
+      if (categoryFilter) {
+        if (categoryFilter === 'Others') {
+          categoryCondition = ` AND category NOT IN ('Transportation', 'Food')`;
+        } else {
+          categoryCondition = ' AND category = $3';
+          params.push(categoryFilter);
+        }
+      }
+      
+      // Get total for the month
+      const totalQuery = `SELECT COALESCE(SUM(amount), 0) AS total FROM expenses WHERE user_id = $1 AND to_char(date,'YYYY-MM') = $2${categoryCondition}`;
+      const totalResult = await pool.query(totalQuery, params);
+      
+      // Get category breakdown (Transportation, Food, Others)
+      const categoryQuery = `
+        SELECT 
+          CASE 
+            WHEN category = 'Transportation' THEN 'Transportation'
+            WHEN category = 'Food' THEN 'Food'
+            ELSE 'Others'
+          END as category_group,
+          COALESCE(SUM(amount), 0) as total
+        FROM expenses 
+        WHERE user_id = $1 AND to_char(date,'YYYY-MM') = $2
+        GROUP BY category_group
+        ORDER BY total DESC
+      `;
+      const categoryResult = await pool.query(categoryQuery, [userId, monthStr]);
+      
+      // Get expense details for the filter
+      const expenseQuery = `SELECT * FROM expenses WHERE user_id = $1 AND to_char(date,'YYYY-MM') = $2${categoryCondition} ORDER BY date DESC, created_at DESC`;
+      const expenseResult = await pool.query(expenseQuery, params);
+      
+      // Initialize category totals
+      const categoryTotals = {
+        Transportation: 0,
+        Food: 0,
+        Others: 0
+      };
+      
+      // Fill in the actual totals
+      categoryResult.rows.forEach(row => {
+        categoryTotals[row.category_group] = Number(row.total);
+      });
+      
+      res.json({
+        monthStr,
+        total: Number(totalResult.rows[0].total),
+        categoryTotals,
+        categoryBreakdown: categoryResult.rows.map(row => ({
+          category: row.category_group,
+          total: Number(row.total)
+        })),
+        expenses: expenseResult.rows
+      });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Failed to load monthly summary' });
+    }
+  });
+
   // Health endpoint
   app.get(`${prefix}/health`, (req, res) => res.json({ ok: true }));
 }
