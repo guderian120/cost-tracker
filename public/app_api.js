@@ -54,6 +54,14 @@ class CostTracker {
       this.loadExpenses();
     });
 
+    // Monthly summary event listeners
+    document.getElementById('load-summary').addEventListener('click', () => this.loadMonthlySummary());
+    document.getElementById('clear-summary-filters').addEventListener('click', () => {
+      document.getElementById('summary-month').value = '';
+      document.getElementById('summary-category-filter').value = '';
+      this.clearMonthlySummary();
+    });
+
     document.getElementById('expense-date').value = new Date().toISOString().split('T')[0];
   }
 
@@ -148,6 +156,7 @@ class CostTracker {
     document.getElementById('welcome-user').textContent = `Welcome, ${this.currentUser.username}!`;
     this.loadDashboard();
     this.populateMonthFilter();
+    this.populateSummaryMonthFilter();
   }
 
   switchTab(tabName) {
@@ -157,6 +166,7 @@ class CostTracker {
     document.getElementById(tabName).classList.add('active');
     if (tabName === 'dashboard') this.loadDashboard();
     else if (tabName === 'expenses') this.loadExpenses();
+    else if (tabName === 'monthly-summary') this.initializeMonthlySummary();
     else if (tabName === 'projections') this.loadProjections();
   }
 
@@ -202,10 +212,10 @@ class CostTracker {
       const monthlyBudget = budgetData.monthly_budget || 0;
       const remainingBudget = monthlyBudget - monthlyTotal;
 
-      document.getElementById('monthly-total').textContent = `₵${Number(monthlyTotal).toFixed(2)}`;
-      document.getElementById('total-expenses').textContent = `₵${Number(totalExpenses).toFixed(2)}`;
-      document.getElementById('monthly-budget').textContent = `₵${Number(monthlyBudget).toFixed(2)}`;
-      document.getElementById('remaining-budget').textContent = `₵${Number(remainingBudget).toFixed(2)}`;
+      document.getElementById('monthly-total').textContent = `$${Number(monthlyTotal).toFixed(2)}`;
+      document.getElementById('total-expenses').textContent = `$${Number(totalExpenses).toFixed(2)}`;
+      document.getElementById('monthly-budget').textContent = `$${Number(monthlyBudget).toFixed(2)}`;
+      document.getElementById('remaining-budget').textContent = `$${Number(remainingBudget).toFixed(2)}`;
       document.getElementById('remaining-budget').style.color = remainingBudget < 0 ? '#e74c3c' : '#27ae60';
 
       const list = document.getElementById('recent-expenses-list');
@@ -217,7 +227,7 @@ class CostTracker {
             <span class="expense-category">${e.category}</span>
           </div>
           <div class="expense-details">
-            <span class="expense-amount">₵${Number(e.amount).toFixed(2)}</span>
+            <span class="expense-amount">$${Number(e.amount).toFixed(2)}</span>
             <span class="expense-date">${e.date}</span>
           </div>
         </div>`).join('');
@@ -255,7 +265,7 @@ class CostTracker {
           <div class="expense-row">
             <div class="expense-desc">${e.description}</div>
             <div class="expense-category">${e.category}</div>
-            <div class="expense-amount">₵${Number(e.amount).toFixed(2)}</div>
+            <div class="expense-amount">$${Number(e.amount).toFixed(2)}</div>
             <div class="expense-date">${e.date}</div>
             <div class="expense-actions">
               <button class="delete-btn" onclick="app.deleteExpense(${e.id})">Delete</button>
@@ -336,8 +346,8 @@ class CostTracker {
       fill.style.backgroundColor = progress > 100 ? '#e74c3c' : progress > 80 ? '#f39c12' : '#27ae60';
       text.textContent = `${progress.toFixed(1)}% of budget used`;
 
-      document.getElementById('daily-average').textContent = `₵${dailyAvg.toFixed(2)}`;
-      document.getElementById('projected-total').textContent = `₵${projected.toFixed(2)}`;
+      document.getElementById('daily-average').textContent = `$${dailyAvg.toFixed(2)}`;
+      document.getElementById('projected-total').textContent = `$${projected.toFixed(2)}`;
 
       const chart = document.getElementById('category-chart');
       if (!Array.isArray(categories) || categories.length === 0) chart.innerHTML = '<p>No expenses recorded this month.</p>';
@@ -347,7 +357,7 @@ class CostTracker {
           <div class="category-item">
             <div class="category-info">
               <span class="category-name">${c.category}</span>
-              <span class="category-amount">₵${Number(c.total).toFixed(2)} (${pct.toFixed(1)}%)</span>
+              <span class="category-amount">$${Number(c.total).toFixed(2)} (${pct.toFixed(1)}%)</span>
             </div>
             <div class="category-bar">
               <div class="category-fill" style="width:${pct}%;"></div>
@@ -379,6 +389,131 @@ class CostTracker {
     }
   }
 
+  async populateSummaryMonthFilter() {
+    try {
+      const res = await fetch(`/api/expenses?user_id=${this.currentUser.id}`);
+      const all = await res.json();
+      const months = Array.from(new Set(all.map((e) => String(e.date).slice(0, 7))))
+        .filter(Boolean)
+        .sort()
+        .reverse();
+      const select = document.getElementById('summary-month');
+      select.innerHTML = '<option value="">Select a month</option>';
+      for (const m of months) {
+        const date = new Date(m + '-01');
+        const label = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+        select.innerHTML += `<option value="${m}">${label}</option>`;
+      }
+    } catch (err) {
+      // silent
+    }
+  }
+
+  initializeMonthlySummary() {
+    this.clearMonthlySummary();
+    this.populateSummaryMonthFilter();
+  }
+
+  clearMonthlySummary() {
+    // Reset all values to $0.00
+    document.getElementById('summary-total').textContent = '$0.00';
+    document.getElementById('summary-transportation').textContent = '$0.00';
+    document.getElementById('summary-food').textContent = '$0.00';
+    document.getElementById('summary-others').textContent = '$0.00';
+    document.getElementById('summary-category-chart').innerHTML = '<p>Select a month to view category breakdown.</p>';
+    document.getElementById('summary-expense-list').innerHTML = '<p>Select a month to view expense details.</p>';
+  }
+
+  async loadMonthlySummary() {
+    const monthStr = document.getElementById('summary-month').value;
+    const categoryFilter = document.getElementById('summary-category-filter').value;
+    
+    if (!monthStr) {
+      this.showMessage('Please select a month', 'error');
+      return;
+    }
+
+    try {
+      const url = new URL('/api/stats/monthly-summary', window.location.origin);
+      url.searchParams.set('user_id', this.currentUser.id);
+      url.searchParams.set('monthStr', monthStr);
+      if (categoryFilter) {
+        url.searchParams.set('category', categoryFilter);
+      }
+      
+      const res = await fetch(url.toString());
+      const data = await res.json();
+      
+      if (!res.ok) throw new Error(data.error || 'Failed to load monthly summary');
+      
+      // Update summary cards
+      const total = categoryFilter ? data.total : (data.categoryTotals.Transportation + data.categoryTotals.Food + data.categoryTotals.Others);
+      document.getElementById('summary-total').textContent = `$${total.toFixed(2)}`;
+      document.getElementById('summary-transportation').textContent = `$${data.categoryTotals.Transportation.toFixed(2)}`;
+      document.getElementById('summary-food').textContent = `$${data.categoryTotals.Food.toFixed(2)}`;
+      document.getElementById('summary-others').textContent = `$${data.categoryTotals.Others.toFixed(2)}`;
+      
+      // Update category breakdown chart
+      this.renderCategoryChart(data.categoryBreakdown, data.categoryTotals.Transportation + data.categoryTotals.Food + data.categoryTotals.Others);
+      
+      // Update expense details
+      this.renderExpenseDetails(data.expenses, categoryFilter);
+      
+    } catch (err) {
+      this.showMessage(err.message || 'Failed to load monthly summary', 'error');
+    }
+  }
+
+  renderCategoryChart(categoryData, totalAmount) {
+    const chart = document.getElementById('summary-category-chart');
+    
+    if (!Array.isArray(categoryData) || categoryData.length === 0 || totalAmount === 0) {
+      chart.innerHTML = '<p>No expenses found for the selected criteria.</p>';
+      return;
+    }
+
+    chart.innerHTML = categoryData.map((c) => {
+      const pct = totalAmount > 0 ? (c.total / totalAmount) * 100 : 0;
+      return `
+        <div class="category-item">
+          <div class="category-info">
+            <span class="category-name">${c.category}</span>
+            <span class="category-amount">$${c.total.toFixed(2)} (${pct.toFixed(1)}%)</span>
+          </div>
+          <div class="category-bar">
+            <div class="category-fill" style="width:${pct}%;"></div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  renderExpenseDetails(expenses, categoryFilter) {
+    const list = document.getElementById('summary-expense-list');
+    
+    if (!Array.isArray(expenses) || expenses.length === 0) {
+      const filterText = categoryFilter ? ` in ${categoryFilter} category` : '';
+      list.innerHTML = `<p>No expenses found${filterText} for the selected month.</p>`;
+      return;
+    }
+
+    list.innerHTML = `
+      <div class="expenses-header">
+        <div>Description</div>
+        <div>Category</div>
+        <div>Amount</div>
+        <div>Date</div>
+      </div>
+      ${expenses.map((e) => `
+        <div class="expense-row">
+          <div class="expense-desc">${e.description}</div>
+          <div class="expense-category">${e.category}</div>
+          <div class="expense-amount">$${Number(e.amount).toFixed(2)}</div>
+          <div class="expense-date">${e.date}</div>
+        </div>
+      `).join('')}
+    `;
+  }
+
   showMessage(message, type) {
     const el = document.getElementById('message');
     el.textContent = message;
@@ -392,3 +527,4 @@ let app;
 document.addEventListener('DOMContentLoaded', () => {
   app = new CostTracker();
 });
+

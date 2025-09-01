@@ -27,7 +27,7 @@
                     </div>
                     <button type="submit">Login</button>
                 </form>
-                <p><a href="#register" id="show-register">Don't have an account? Register here</a></p>
+                <p><a href="#" id="show-register">Don't have an account? Register here</a></p>
             </div>
 
             <!-- Register Form -->
@@ -67,6 +67,7 @@
             <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
             <button class="tab-btn" data-tab="add-expense">Add Expense</button>
             <button class="tab-btn" data-tab="expenses">View Expenses</button>
+            <button class="tab-btn" data-tab="monthly-summary">Monthly Summary</button>
             <button class="tab-btn" data-tab="projections">Monthly Projections</button>
         </nav>
 
@@ -76,19 +77,19 @@
             <div class="stats-grid">
                 <div class="stat-card">
                     <h3>Total Expenses (This Month)</h3>
-                    <p class="stat-value" id="monthly-total">₵0.00</p>
+                    <p class="stat-value" id="monthly-total">$0.00</p>
                 </div>
                 <div class="stat-card">
                     <h3>Total Expenses (All Time)</h3>
-                    <p class="stat-value" id="total-expenses">₵0.00</p>
+                    <p class="stat-value" id="total-expenses">$0.00</p>
                 </div>
                 <div class="stat-card">
                     <h3>Monthly Budget</h3>
-                    <p class="stat-value" id="monthly-budget">₵0.00</p>
+                    <p class="stat-value" id="monthly-budget">$0.00</p>
                 </div>
                 <div class="stat-card">
                     <h3>Remaining Budget</h3>
-                    <p class="stat-value" id="remaining-budget">₵0.00</p>
+                    <p class="stat-value" id="remaining-budget">$0.00</p>
                 </div>
             </div>
             <div class="recent-expenses">
@@ -156,6 +157,63 @@
             <div id="expenses-list"></div>
         </div>
 
+        <!-- Monthly Summary Tab -->
+        <div id="monthly-summary" class="tab-content">
+            <h2>Monthly Cost Summary</h2>
+            <div class="filters">
+                <div class="filter-group">
+                    <label for="summary-month">Select Month:</label>
+                    <select id="summary-month" required>
+                        <option value="">Select a month</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="summary-category-filter">Filter by Category:</label>
+                    <select id="summary-category-filter">
+                        <option value="">All Categories</option>
+                        <option value="Transportation">Transportation</option>
+                        <option value="Food">Food</option>
+                        <option value="Others">Others</option>
+                    </select>
+                </div>
+                <button id="load-summary">Load Summary</button>
+                <button id="clear-summary-filters">Clear</button>
+            </div>
+            
+            <div id="monthly-summary-content">
+                <div class="summary-overview">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <h3>Total Monthly Expenses</h3>
+                            <p class="stat-value" id="summary-total">$0.00</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Transportation</h3>
+                            <p class="stat-value" id="summary-transportation">$0.00</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Food</h3>
+                            <p class="stat-value" id="summary-food">$0.00</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Others</h3>
+                            <p class="stat-value" id="summary-others">$0.00</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="category-breakdown">
+                    <h3>Category Breakdown</h3>
+                    <div id="summary-category-chart"></div>
+                </div>
+                
+                <div class="expense-details">
+                    <h3>Expense Details</h3>
+                    <div id="summary-expense-list"></div>
+                </div>
+            </div>
+        </div>
+
         <!-- Monthly Projections Tab -->
         <div id="projections" class="tab-content">
             <h2>Monthly Budget & Projections</h2>
@@ -177,11 +235,11 @@
                 </div>
                 <div class="stat-card">
                     <h3>Average Daily Spending</h3>
-                    <p class="stat-value" id="daily-average">₵0.00</p>
+                    <p class="stat-value" id="daily-average">$0.00</p>
                 </div>
                 <div class="stat-card">
                     <h3>Projected Monthly Total</h3>
-                    <p class="stat-value" id="projected-total">₵0.00</p>
+                    <p class="stat-value" id="projected-total">$0.00</p>
                 </div>
             </div>
             
@@ -198,4 +256,3 @@
     <script src="app_api.js"></script>
 </body>
 </html>
-
